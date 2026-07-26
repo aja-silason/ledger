@@ -1,6 +1,7 @@
 package domain
 
 import (
+	"errors"
 	"time"
 
 	"github.com/google/uuid"
@@ -16,3 +17,51 @@ type Account struct {
 }
 
 type LegDirection string
+
+const (
+	Debit  LegDirection = "DEBIT"
+	Credit LegDirection = "CREDIT"
+)
+
+type TransactionLeg struct {
+	ID        uuid.UUID       `json:"id"`
+	AccountID uuid.UUID       `json:"account_id"`
+	Direction LegDirection    `json:"direction"`
+	Amount    decimal.Decimal `json:"amount"`
+}
+
+type Transaction struct {
+	ID             uuid.UUID        `json:"id"`
+	IdempotencyKey string           `json:"idempotency_key"`
+	Description    string           `json:"description"`
+	Legs           []TransactionLeg `json:"legs"`
+	CratedAt       time.Time        `json:"created_at"`
+}
+
+func (t *Transaction) validate() error {
+
+	if len(t.Legs) < 2 {
+		return errors.New("Uma transação deve conter pelo menos dois lados 'conta' (débito e crédito)")
+	}
+
+	totalDebit := decimal.Zero
+	totalCredit := decimal.Zero
+
+	for _, leg := range t.Legs {
+		if leg.Amount.LessThanOrEqual(decimal.Zero) {
+			return errors.New("O valor de cada lado deve ser maior que zero (0)")
+		}
+
+		if leg.Direction == Debit {
+			totalDebit = totalDebit.Add(leg.Amount)
+		} else if leg.Direction == Credit {
+			totalCredit = totalCredit.Add(leg.Amount)
+		}
+	}
+
+	if !totalDebit.Equal(totalCredit) {
+		return errors.New("Livro razao desbalanceado: a soma dos debitos deve ser igual à soma dos creditos")
+	}
+
+	return nil
+}
