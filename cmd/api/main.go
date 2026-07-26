@@ -14,11 +14,16 @@ import (
 	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
+// @title           Ledger Financial API
+// @version         1.0
+// @description     API de Livro Razão (Ledger) para controle financeiro com Contabilidade de Dupla Entrada e Idempotência.
+// @host            localhost:8080
+// @BasePath        /
 func main() {
 	_ = uuid.New()
 	_ = decimal.NewFromInt(100)
 
-	dbURL := "postgres://postgres:secretpassword@localhost:5432/ledger_db?sslmode=disable"
+	dbURL := "postgres://postgres:ledger@localhost:5001/ledger?sslmode=disable"
 	db, err := sql.Open("postgres", dbURL)
 	if err != nil {
 		log.Fatalf("Erro na base de dados: %v", err)
@@ -27,7 +32,6 @@ func main() {
 
 	r := gin.Default()
 
-	// Swagger
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	r.GET("/health", func(c *gin.Context) {
