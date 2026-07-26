@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/aja-silason/ledger/internal/application"
+	"github.com/aja-silason/ledger/internal/infra/http"
 	"github.com/gin-gonic/gin"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/google/uuid"
@@ -32,11 +34,18 @@ func main() {
 
 	r := gin.Default()
 
+	// ledgerRepo := application.NewCreateAccountService()
+	ledgerCreateService := application.NewCreateAccountService(ledgerRepo)
+	ledgerController := http.NewLedgerController(ledgerRepo, ledgerCreateService)
+
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	r.GET("/health", func(c *gin.Context) {
 		c.JSON(200, gin.H{"status": "ok"})
 	})
+
+	r.POST("/accounts", ledgerController.CreateAccountTransaction)
+	r.POST("/create-transation", ledgerController.CreateTransaction)
 
 	fmt.Println("🚀 Servidor iniciado na porta 8080")
 	r.Run(":8080")

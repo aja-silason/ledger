@@ -8,12 +8,22 @@ import (
 	"github.com/shopspring/decimal"
 )
 
+type AccountType string
+
+const (
+	Asset     AccountType = "ASSET"
+	Liability AccountType = "LIABILITY"
+	Equity    AccountType = "EQUITY"
+	Revenue   AccountType = "REVENUE"
+	Expense   AccountType = "EXPENSE"
+)
+
 type Account struct {
-	ID        uuid.UUID       `json:"id"`
-	Name      string          `json:"name"`
-	Type      AccountType     `json:"type"`
-	Balance   decimal.Decimal `json:"balance"`
-	CreatedAt time.Time       `json:"created_at"`
+	ID   uuid.UUID   `json:"id"`
+	Name string      `json:"name"`
+	Type AccountType `json:"type"`
+	// Balance   decimal.Decimal `json:"balance"`
+	CreatedAt time.Time `json:"created_at"`
 }
 
 type LegDirection string
@@ -35,10 +45,10 @@ type Transaction struct {
 	IdempotencyKey string           `json:"idempotency_key"`
 	Description    string           `json:"description"`
 	Legs           []TransactionLeg `json:"legs"`
-	CratedAt       time.Time        `json:"created_at"`
+	CreatedAt      time.Time        `json:"created_at"`
 }
 
-func (t *Transaction) validate() error {
+func (t *Transaction) Validate() error {
 
 	if len(t.Legs) < 2 {
 		return errors.New("Uma transação deve conter pelo menos dois lados 'conta' (débito e crédito)")
@@ -61,6 +71,15 @@ func (t *Transaction) validate() error {
 
 	if !totalDebit.Equal(totalCredit) {
 		return errors.New("Livro razao desbalanceado: a soma dos debitos deve ser igual à soma dos creditos")
+	}
+
+	return nil
+}
+
+func (a *Account) ValidateAccount() error {
+
+	if a.Name == "" {
+		return errors.New("Nome não pode estar vazio")
 	}
 
 	return nil
