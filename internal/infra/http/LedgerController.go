@@ -58,6 +58,7 @@ func (h *LedgerController) CreateAccountTransaction(c *gin.Context) {
 	result, err := h.createAccount.PostCreateAccount(c.Request.Context(), &req)
 	if err != nil {
 		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
+		return
 	}
 
 	c.JSON(http.StatusCreated, result)

@@ -3,37 +3,38 @@ package application
 import (
 	"context"
 	"errors"
-	"time"
+	"log"
 
 	"github.com/aja-silason/ledger/internal/domain"
-	"github.com/google/uuid"
+	"github.com/aja-silason/ledger/internal/infra/postgres"
 )
 
-type AccountRepository interface {
-	CreateAccount(ctx context.Context, tx *domain.Account) error
-}
+var (
+	createdAccountErro = errors.New("Falha ao criar a conta")
+)
 
 type CreateAccountService struct {
-	repo AccountRepository
+	repo *postgres.AccountRepository
 }
 
-func NewCreateAccountService(repo AccountRepository) *CreateAccountService {
+func NewCreateAccountService(repo *postgres.AccountRepository) *CreateAccountService {
 	return &CreateAccountService{repo: repo}
 }
 
 func (u *CreateAccountService) PostCreateAccount(ctx context.Context, tx *domain.Account) (*domain.Account, error) {
 
-	if err := tx.ValidateAccount(); err == nil {
+	if err := tx.ValidateAccount(); err != nil {
 		return nil, err
 	}
 
-	tx.ID = uuid.New()
-	tx.CreatedAt = time.Now()
-	tx.Name = "Conta de Test"
-	tx.Type = domain.Equity
+	if err := tx.ValidateAccountType(string(tx.Type)); err != nil {
+		return nil, err
+	}
 
-	if err := u.repo.CreateAccount(ctx, tx); err != nil {
-		return nil, errors.New("Falha ao criar a conta")
+	_, err := u.repo.Save(tx)
+	if err != nil {
+		log.Printf("[ERRO BANCO DE DADOS] Falha no Save: %v", err)
+		return nil, createdAccountErro
 	}
 
 	return tx, nil

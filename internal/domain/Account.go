@@ -84,3 +84,13 @@ func (a *Account) ValidateAccount() error {
 
 	return nil
 }
+
+func (a *Account) ValidateAccountType(types string) error {
+	switch a.Type {
+	case Asset, Equity, Liability, Revenue, Expense:
+		return nil
+	default:
+		return errors.New("Tipo de conta inválido")
+	}
+
+}
