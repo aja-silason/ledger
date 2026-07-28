@@ -9,16 +9,17 @@ import (
 )
 
 type LedgerController struct {
-	service       *application.LedgerService
-	createAccount *application.CreateAccountService
+	service *application.LedgerService
+	// createAccount *application.CreateAccountService
 }
 
 func NewLedgerController(
 	service *application.LedgerService,
-	createAccount *application.CreateAccountService) *LedgerController {
+) *LedgerController {
+	// createAccount *application.CreateAccountService
 	return &LedgerController{
-		service:       service,
-		createAccount: createAccount,
+		service: service,
+		// createAccount: createAccount,
 	}
 }
 
@@ -48,18 +49,18 @@ func (h *LedgerController) CreateTransaction(c *gin.Context) {
 
 }
 
-func (h *LedgerController) CreateAccountTransaction(c *gin.Context) {
-	var req domain.Account
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Payload inválido"})
-		return
-	}
+// func (h *LedgerController) CreateAccountTransaction(c *gin.Context) {
+// 	var req domain.Account
+// 	if err := c.ShouldBindJSON(&req); err != nil {
+// 		c.JSON(http.StatusBadRequest, gin.H{"error": "Payload inválido"})
+// 		return
+// 	}
 
-	result, err := h.createAccount.PostCreateAccount(c.Request.Context(), &req)
-	if err != nil {
-		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
-		return
-	}
+// 	result, err := h.createAccount.PostCreateAccount(c.Request.Context(), &req)
+// 	if err != nil {
+// 		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
+// 		return
+// 	}
 
-	c.JSON(http.StatusCreated, result)
-}
+// 	c.JSON(http.StatusCreated, result)
+// }

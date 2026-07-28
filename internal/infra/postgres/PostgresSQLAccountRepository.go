@@ -31,7 +31,6 @@ func (r *AccountRepository) Save(account *domain.Account) (*domain.Account, erro
 		return nil, err
 	}
 
-	// id, _ := res.LastInsertId()
 	return r.FindByID(id.String())
 }
 
