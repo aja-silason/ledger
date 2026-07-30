@@ -9,13 +9,16 @@ import (
 )
 
 type AccountController struct {
-	Create *application.CreateAccountService
+	Create     *application.CreateAccountService
+	GetAccount *application.GetAccountService
 }
 
 func NewAccountController(
-	Create *application.CreateAccountService) *AccountController {
+	Create *application.CreateAccountService,
+	GetAccount *application.GetAccountService) *AccountController {
 	return &AccountController{
-		Create: Create}
+		Create:     Create,
+		GetAccount: GetAccount}
 }
 
 func (h *AccountController) CreateAccount(c *gin.Context) {
@@ -32,4 +35,17 @@ func (h *AccountController) CreateAccount(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusCreated, result)
+}
+
+func (h *AccountController) FindByID(c *gin.Context) {
+	var id string
+
+	resul, err := h.GetAccount.FindAccountByID(c.Request.Context(), id)
+	if err != nil {
+		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusAccepted, resul)
+
 }

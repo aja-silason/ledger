@@ -14,12 +14,6 @@ import (
 	"github.com/shopspring/decimal"
 )
 
-// @title           Ledger Financial API
-// @version         1.0
-// @description     API de Livro Razão (Ledger) para controle financeiro com Contabilidade de Dupla Entrada e Idempotência.
-// @host            localhost:8080
-//
-//	@BasePath        /
 func main() {
 	_ = uuid.New()
 	_ = decimal.NewFromInt(100)
@@ -36,11 +30,13 @@ func main() {
 	}
 	fmt.Println("✅ Conexão com o PostgreSQL estabelecida com sucesso!")
 
-	postgresRepo := postgres.NewPostgresSQLAccountRepository(db)
-	ledgerCreateService := application.NewCreateAccountService(postgresRepo)
+	accountRepository := postgres.NewPostgresSQLAccountRepository(db)
+	accountGateway := postgres.NewPostgresSQLAccountGateway(db)
+	createAccount := application.NewCreateAccountService(accountRepository)
+	getAccount := application.NewGetAccountService(accountGateway)
 	// ledgerController := http.NewLedgerController(nil, ledgerCreateService)
 
-	accountController := http.NewAccountController(ledgerCreateService)
+	accountController := http.NewAccountController(createAccount, getAccount)
 
 	controllers := &http.Controllers{
 		AccountController: accountController,
