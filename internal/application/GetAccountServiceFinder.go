@@ -42,7 +42,7 @@ func (u *GetAccountServiceFinder) FindAccountByID(ctx context.Context, id string
 func (u *GetAccountServiceFinder) FindAllAccount(ctx context.Context) (*domain.Account, error) {
 	accounts, err := u.gateway.FindAll()
 	if err != nil {
-		log.Print("Erro aqui. O erro no findAll: %v", err)
+		log.Printf("Erro aqui. O erro no findAll: %v", err)
 		return nil, ListHasError
 	}
 
