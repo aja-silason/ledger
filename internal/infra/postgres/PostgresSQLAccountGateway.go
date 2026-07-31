@@ -23,3 +23,19 @@ func (r *AccountGateway) FindByID(id string) (*domain.Account, error) {
 	}
 	return u, err
 }
+
+func (r *AccountGateway) FindAll() (*domain.Account, error) {
+	var account domain.Account
+
+	err := r.db.QueryRow(`SELECT id, name, type, created_at FROM accounts ORDER BY created_at`).Scan(&account.ID, &account.Name, &account.Type, &account.CreatedAt)
+
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, nil
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &account, nil
+}

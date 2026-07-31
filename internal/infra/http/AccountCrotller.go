@@ -10,12 +10,12 @@ import (
 
 type AccountController struct {
 	Create     *application.CreateAccountService
-	GetAccount *application.GetAccountService
+	GetAccount *application.GetAccountServiceFinder
 }
 
 func NewAccountController(
 	Create *application.CreateAccountService,
-	GetAccount *application.GetAccountService) *AccountController {
+	GetAccount *application.GetAccountServiceFinder) *AccountController {
 	return &AccountController{
 		Create:     Create,
 		GetAccount: GetAccount}
