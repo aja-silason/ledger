@@ -9,16 +9,16 @@ import (
 )
 
 type AccountController struct {
-	Create     *application.CreateAccountService
-	GetAccount *application.GetAccountServiceFinder
+	Create *application.CreateAccountService
+	Finder *application.GetAccountServiceFinder
 }
 
 func NewAccountController(
 	Create *application.CreateAccountService,
-	GetAccount *application.GetAccountServiceFinder) *AccountController {
+	Finder *application.GetAccountServiceFinder) *AccountController {
 	return &AccountController{
-		Create:     Create,
-		GetAccount: GetAccount}
+		Create: Create,
+		Finder: Finder}
 }
 
 func (h *AccountController) CreateAccount(c *gin.Context) {
@@ -40,7 +40,7 @@ func (h *AccountController) CreateAccount(c *gin.Context) {
 func (h *AccountController) FindByID(c *gin.Context) {
 	id := c.Param("id")
 
-	resul, err := h.GetAccount.FindAccountByID(c.Request.Context(), id)
+	resul, err := h.Finder.FindAccountByID(c.Request.Context(), id)
 	if err != nil {
 		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
 		return
@@ -51,7 +51,7 @@ func (h *AccountController) FindByID(c *gin.Context) {
 
 func (h *AccountController) FindAll(c *gin.Context) {
 
-	result, err := h.GetAccount.FindAllAccount(c.Request.Context())
+	result, err := h.Finder.FindAllAccount(c.Request.Context())
 	if err != nil {
 		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
 		return
