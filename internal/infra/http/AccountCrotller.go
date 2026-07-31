@@ -38,7 +38,8 @@ func (h *AccountController) CreateAccount(c *gin.Context) {
 }
 
 func (h *AccountController) FindByID(c *gin.Context) {
-	var id string
+
+	id := c.Param("id")
 
 	resul, err := h.GetAccount.FindAccountByID(c.Request.Context(), id)
 	if err != nil {

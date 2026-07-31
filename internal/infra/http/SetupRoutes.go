@@ -8,6 +8,7 @@ func SetupRoutes(c *Controllers) *gin.Engine {
 	accounts := r.Group("/accounts")
 	{
 		accounts.POST("", c.AccountController.CreateAccount)
+		accounts.GET("/:id", c.AccountController.FindByID)
 	}
 
 	return r
