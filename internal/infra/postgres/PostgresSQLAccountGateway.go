@@ -24,18 +24,30 @@ func (r *AccountGateway) FindByID(id string) (*domain.Account, error) {
 	return u, err
 }
 
-func (r *AccountGateway) FindAll() (*domain.Account, error) {
-	var account domain.Account
+func (r *AccountGateway) FindAll() ([]*domain.Account, error) {
 
-	err := r.db.QueryRow(`SELECT id, name, type, created_at FROM accounts ORDER BY created_at`).Scan(&account.ID, &account.Name, &account.Type, &account.CreatedAt)
-
-	if errors.Is(err, sql.ErrNoRows) {
-		return nil, nil
-	}
+	rows, err := r.db.Query(`SELECT id, name, type, created_at FROM accounts ORDER BY created_at`)
 
 	if err != nil {
 		return nil, err
 	}
 
-	return &account, nil
+	defer rows.Close()
+
+	var accounts []*domain.Account
+
+	for rows.Next() {
+		var account domain.Account
+		if err := rows.Scan(&account.ID, &account.Name, &account.Type, &account.CreatedAt); err != nil {
+			return nil, err
+		}
+		accounts = append(accounts, &account)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return accounts, nil
+
 }
