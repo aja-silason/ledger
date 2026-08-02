@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/aja-silason/ledger/internal/domain"
-	"github.com/google/uuid"
 )
 
 type AccountRepository struct{ db *sql.DB }
@@ -18,11 +17,10 @@ func NewPostgresSQLAccountRepository(db *sql.DB) *AccountRepository {
 var ErrAccountNotFound = errors.New("Conta não encontrada")
 
 func (r *AccountRepository) Save(account *domain.Account) (*domain.Account, error) {
-	id := uuid.New()
 	now := time.Now().UTC()
 	res, err := r.db.Exec(
 		`INSERT INTO accounts (id, name, type, created_at) VALUES ($1, $2, $3, $4)`,
-		id,
+		account.ID,
 		account.Name,
 		account.Type,
 		now)
@@ -31,7 +29,7 @@ func (r *AccountRepository) Save(account *domain.Account) (*domain.Account, erro
 		return nil, err
 	}
 
-	return r.FindByID(id.String())
+	return r.FindByID(string(account.ID.String()))
 }
 
 func (r *AccountRepository) FindByID(id string) (*domain.Account, error) {

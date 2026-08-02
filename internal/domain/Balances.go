@@ -10,6 +10,7 @@ import (
 var (
 	CurrencyTypeNotAllowedError = errors.New("Tipo de moeda não permitido")
 	AmountCanotBeNegativeError  = errors.New("Montante não pode ser negativo")
+	ErrBalanceNotFound          = errors.New("Montante não encontrado")
 )
 
 type CurrencyType string
@@ -25,7 +26,7 @@ type Balance struct {
 	ID            uuid.UUID    `json:"id"`
 	AccountID     uuid.UUID    `json:"account_id"`
 	CurrencyCode  CurrencyType `json:"currency_code"`
-	CurrentAmount int          `json:"current_amount"`
+	CurrentAmount int64        `json:"current_amount"`
 	UpdatedAt     time.Time    `json:"updated_at"`
 	CreatedAt     time.Time    `json:"created_at"`
 }

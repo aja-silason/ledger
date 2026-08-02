@@ -31,8 +31,9 @@ func main() {
 	fmt.Println("✅ Conexão com o PostgreSQL estabelecida com sucesso!")
 
 	accountRepository := postgres.NewPostgresSQLAccountRepository(db)
+	balanceRepository := postgres.NewPostgresSQLBalanceRepository(db)
 	accountGateway := postgres.NewPostgresSQLAccountGateway(db)
-	createAccount := application.NewCreateAccountService(accountRepository)
+	createAccount := application.NewCreateAccountService(accountRepository, balanceRepository)
 	getAccount := application.NewGetAccountServiceFinder(accountGateway)
 	// ledgerController := http.NewLedgerController(nil, ledgerCreateService)
 
