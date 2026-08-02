@@ -28,7 +28,7 @@ func (b *WithdrawRepository) Save(wt *domain.Withdraw) (*domain.Withdraw, error)
 	return wt, nil
 }
 
-func (b *WithdrawRepository) FindByCode(code int64) (*domain.Withdraw, error) {
+func (b *WithdrawRepository) FindByCode(code string) (*domain.Withdraw, error) {
 	u := &domain.Withdraw{}
 	err := b.db.QueryRow(
 		`SELECT id, account_id, amount, status, code_hash, code, expires_at, created_at, updated_at FROM withdraws WHERE code = $1`, code,
@@ -62,6 +62,8 @@ func (b *WithdrawRepository) FindByAccountId(id string) (*domain.Withdraw, error
 }
 
 func (b *WithdrawRepository) UpdateStatus(id string, status string) (*domain.Withdraw, error) {
+	log.Printf("Olha o estado aqui ====> " + status)
+
 	now := time.Now().UTC()
 	res, err := b.db.Exec(`
 		UPDATE withdraws SET status = $1, updated_at = $2 WHERE id = $3`,

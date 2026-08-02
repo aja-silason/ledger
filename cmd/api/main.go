@@ -45,8 +45,9 @@ func main() {
 	transferMoney := application.NewTransferMoney(balanceRepository, accountRepository, transactionsRepository, entriesRepository)
 
 	withdrawCardless := application.NewWidrawCardLess(withDrawRepository, accountRepository)
+	cancelWithdrawCardless := application.NewCancelWithDrawCardLess(withDrawRepository)
 
-	accountController := http.NewAccountController(createAccount, getAccount, depositIn, transferMoney, withdrawCardless)
+	accountController := http.NewAccountController(createAccount, getAccount, depositIn, transferMoney, withdrawCardless, cancelWithdrawCardless, nil)
 
 	controllers := &http.Controllers{
 		AccountController: accountController,

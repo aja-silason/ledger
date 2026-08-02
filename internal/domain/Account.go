@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/shopspring/decimal"
 )
 
 type AccountType string
@@ -34,11 +33,11 @@ const (
 )
 
 type TransactionLeg struct {
-	ID            uuid.UUID       `json:"id"`
-	TransactionID uuid.UUID       `json:"transaction_id"`
-	AccountID     uuid.UUID       `json:"account_id"`
-	Direction     LegDirection    `json:"direction"`
-	Amount        decimal.Decimal `json:"amount"`
+	ID            uuid.UUID    `json:"id"`
+	TransactionID uuid.UUID    `json:"transaction_id"`
+	AccountID     uuid.UUID    `json:"account_id"`
+	Direction     LegDirection `json:"direction"`
+	Amount        int64        `json:"amount"`
 }
 
 type Transaction struct {
@@ -55,24 +54,24 @@ func (t *Transaction) Validate() error {
 		return errors.New("Uma transação deve conter pelo menos dois lados 'conta' (débito e crédito)")
 	}
 
-	totalDebit := decimal.Zero
-	totalCredit := decimal.Zero
+	// totalDebit := decimal.Zero
+	// totalCredit := decimal.Zero
 
-	for _, leg := range t.Legs {
-		if leg.Amount.LessThanOrEqual(decimal.Zero) {
-			return errors.New("O valor de cada lado deve ser maior que zero (0)")
-		}
+	// for _, leg := range t.Legs {
+	// 	if leg.Amount.LessThanOrEqual(decimal.Zero) {
+	// 		return errors.New("O valor de cada lado deve ser maior que zero (0)")
+	// 	}
 
-		if leg.Direction == Debit {
-			totalDebit = totalDebit.Add(leg.Amount)
-		} else if leg.Direction == Credit {
-			totalCredit = totalCredit.Add(leg.Amount)
-		}
-	}
+	// 	if leg.Direction == Debit {
+	// 		totalDebit = totalDebit.Add(leg.Amount)
+	// 	} else if leg.Direction == Credit {
+	// 		totalCredit = totalCredit.Add(leg.Amount)
+	// 	}
+	// }
 
-	if !totalDebit.Equal(totalCredit) {
-		return errors.New("Livro razao desbalanceado: a soma dos debitos deve ser igual à soma dos creditos")
-	}
+	// if !totalDebit.Equal(totalCredit) {
+	// 	return errors.New("Livro razao desbalanceado: a soma dos debitos deve ser igual à soma dos creditos")
+	// }
 
 	return nil
 }

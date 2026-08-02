@@ -84,12 +84,3 @@ func (w *Withdraw) Expired() (Withdraw, error) {
 func (w *Withdraw) IsExpired() bool {
 	return w.Status == EXPIRED
 }
-
-func (w *Withdraw) MarkAsExpired() error {
-	if w.Status != PENDING {
-		return ErrWithdrawNotPending
-	}
-	w.Status = EXPIRED
-	w.UpdatedAt = time.Now()
-	return nil
-}

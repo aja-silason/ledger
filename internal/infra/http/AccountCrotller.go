@@ -9,11 +9,13 @@ import (
 )
 
 type AccountController struct {
-	Create        *application.CreateAccountService
-	Finder        *application.GetAccountServiceFinder
-	DepositIn     *application.DepositIn
-	TransferMoney *application.TransferMoney
-	Withdraw      *application.WidrawCardLess
+	Create         *application.CreateAccountService
+	Finder         *application.GetAccountServiceFinder
+	DepositIn      *application.DepositIn
+	TransferMoney  *application.TransferMoney
+	Withdraw       *application.WidrawCardLess
+	CancelWithdraw *application.CancelWithDrawCardLess
+	Drawed         *application.DrawedCardLess
 }
 
 func NewAccountController(
@@ -21,13 +23,17 @@ func NewAccountController(
 	Finder *application.GetAccountServiceFinder,
 	DepositIn *application.DepositIn,
 	TransferMoney *application.TransferMoney,
-	Withdraw *application.WidrawCardLess) *AccountController {
+	Withdraw *application.WidrawCardLess,
+	CancelWithdraw *application.CancelWithDrawCardLess,
+	Drawed *application.DrawedCardLess) *AccountController {
 	return &AccountController{
-		Create:        Create,
-		Finder:        Finder,
-		DepositIn:     DepositIn,
-		TransferMoney: TransferMoney,
-		Withdraw:      Withdraw}
+		Create:         Create,
+		Finder:         Finder,
+		DepositIn:      DepositIn,
+		TransferMoney:  TransferMoney,
+		Withdraw:       Withdraw,
+		CancelWithdraw: CancelWithdraw,
+		Drawed:         Drawed}
 }
 
 func (h *AccountController) CreateAccount(c *gin.Context) {
@@ -127,6 +133,48 @@ func (h *AccountController) WithdrawCardLess(c *gin.Context) {
 	}
 
 	result, err := h.Withdraw.DemandWidraw(c.Request.Context(), &req)
+	if err != nil {
+		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusCreated, result)
+}
+
+func (h *AccountController) CancelWithdrawCardLess(c *gin.Context) {
+
+	var req application.CancelWithDrawCardLessInput
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Payload inválido"})
+		return
+	}
+
+	result, err := h.CancelWithdraw.Cancel(c.Request.Context(), &req)
+	if err != nil {
+		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusCreated, result)
+}
+
+func (h *AccountController) DrawedCardLess(c *gin.Context) {
+
+	idempotencyKey := c.GetHeader("X-Idempotency-Key")
+	if idempotencyKey == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Header X-Idempotency-Key é obrigatória"})
+		return
+	}
+
+	var req application.DrawedCardLessInput
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Payload inválido"})
+		return
+	}
+
+	result, err := h.Drawed.Drawed(c.Request.Context(), idempotencyKey, &req)
 	if err != nil {
 		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
 		return

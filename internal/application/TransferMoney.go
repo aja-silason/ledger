@@ -9,7 +9,6 @@ import (
 	"github.com/aja-silason/ledger/internal/domain"
 	"github.com/aja-silason/ledger/internal/infra/postgres"
 	"github.com/google/uuid"
-	"github.com/shopspring/decimal"
 )
 
 type TransferMoney struct {
@@ -149,7 +148,7 @@ func (d *TransferMoney) transaction(ctx context.Context, key string, fromAccount
 		ID:            uuid.New(),
 		TransactionID: transactionId,
 		AccountID:     fromAccountId,
-		Amount:        decimal.NewFromInt(amount),
+		Amount:        amount,
 		Direction:     domain.Debit,
 	}
 
@@ -157,7 +156,7 @@ func (d *TransferMoney) transaction(ctx context.Context, key string, fromAccount
 		ID:            uuid.New(),
 		TransactionID: transactionId,
 		AccountID:     toAccountId,
-		Amount:        decimal.NewFromInt(amount),
+		Amount:        amount,
 		Direction:     domain.Credit,
 	}
 

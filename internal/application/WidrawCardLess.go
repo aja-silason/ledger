@@ -83,3 +83,5 @@ func (w *WidrawCardLess) DemandWidraw(ctx context.Context, input *WithDrawInput)
 
 	return domain.NewSuccessMessage("Seu Código de Levantamento: " + referenceCode), nil
 }
+
+// scomo verificar se o tempo expirou  e marcar como expirado e actualizar, isso tem que ser automáticamente, numa schedule, como fazer isso?
