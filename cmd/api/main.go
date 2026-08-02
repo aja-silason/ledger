@@ -26,9 +26,9 @@ func main() {
 	defer db.Close()
 
 	if err := db.Ping(); err != nil {
-		log.Fatalf("❌ Falha na autenticação ou conexão com o PostgreSQL: %v", err)
+		log.Fatalf("Falha na autenticação ou conexão com o PostgreSQL: %v", err)
 	}
-	fmt.Println("✅ Conexão com o PostgreSQL estabelecida com sucesso!")
+	fmt.Println("Conexão com o PostgreSQL estabelecida com sucesso!")
 
 	// Injeções do Banco de dados
 	accountRepository := postgres.NewPostgresSQLAccountRepository(db)
@@ -46,8 +46,9 @@ func main() {
 
 	withdrawCardless := application.NewWidrawCardLess(withDrawRepository, accountRepository)
 	cancelWithdrawCardless := application.NewCancelWithDrawCardLess(withDrawRepository)
+	drawedWithdrawCardless := application.NewDrawedCardLess(withDrawRepository, transactionsRepository, entriesRepository, balanceRepository)
 
-	accountController := http.NewAccountController(createAccount, getAccount, depositIn, transferMoney, withdrawCardless, cancelWithdrawCardless, nil)
+	accountController := http.NewAccountController(createAccount, getAccount, depositIn, transferMoney, withdrawCardless, cancelWithdrawCardless, drawedWithdrawCardless)
 
 	controllers := &http.Controllers{
 		AccountController: accountController,
@@ -55,6 +56,6 @@ func main() {
 
 	r := http.SetupRoutes(controllers)
 
-	fmt.Println("🚀 Servidor iniciado na porta 8080")
+	fmt.Println("Servidor iniciado na porta 8080")
 	r.Run(":8080")
 }

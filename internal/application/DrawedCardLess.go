@@ -32,7 +32,10 @@ func NewDrawedCardLess(
 	}
 }
 
-var ThatOperationIsAlreadyRealized = errors.New("Esta operação já foi realizada")
+var (
+	ThatOperationIsAlreadyRealized = errors.New("Esta operação já foi realizada")
+	ThisCodeIsNotPendingErr        = errors.New("Este levantamento não está pendente")
+)
 
 func (c *DrawedCardLess) Drawed(ctx context.Context, key string, input *DrawedCardLessInput) (domain.SuccessMessage, error) {
 	existing, err := c.transactionRepo.FindByIdempotencyKey(key)
@@ -43,6 +46,9 @@ func (c *DrawedCardLess) Drawed(ctx context.Context, key string, input *DrawedCa
 	withdraw, err := c.repo.FindByCode(input.Reference)
 	if err != nil {
 		return nil, err
+	}
+	if withdraw != nil && !withdraw.IsPendig() {
+		return nil, ThisCodeIsNotPendingErr
 	}
 
 	drawed, err := withdraw.Drawed()
@@ -55,7 +61,7 @@ func (c *DrawedCardLess) Drawed(ctx context.Context, key string, input *DrawedCa
 		return nil, err
 	}
 
-	err = c.decreaseAmountDrawed(balance, drawed.Amount)
+	err = c.decreaseAmountDrawed(balance, withdraw.Amount)
 	if err != nil {
 		return nil, err
 	}
