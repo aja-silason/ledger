@@ -34,10 +34,11 @@ const (
 )
 
 type TransactionLeg struct {
-	ID        uuid.UUID       `json:"id"`
-	AccountID uuid.UUID       `json:"account_id"`
-	Direction LegDirection    `json:"direction"`
-	Amount    decimal.Decimal `json:"amount"`
+	ID            uuid.UUID       `json:"id"`
+	TransactionID uuid.UUID       `json:"transaction_id"`
+	AccountID     uuid.UUID       `json:"account_id"`
+	Direction     LegDirection    `json:"direction"`
+	Amount        decimal.Decimal `json:"amount"`
 }
 
 type Transaction struct {

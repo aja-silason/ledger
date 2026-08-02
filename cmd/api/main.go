@@ -30,15 +30,20 @@ func main() {
 	}
 	fmt.Println("✅ Conexão com o PostgreSQL estabelecida com sucesso!")
 
+	// Injeções do Banco de dados
 	accountRepository := postgres.NewPostgresSQLAccountRepository(db)
 	balanceRepository := postgres.NewPostgresSQLBalanceRepository(db)
 	transactionsRepository := postgres.NewPostgresSQLTransactionRepository(db)
+	entriesRepository := postgres.NewPostgresSQLEntriesRepository(db)
 	accountGateway := postgres.NewPostgresSQLAccountGateway(db)
+
+	// Injeções dos Services
 	createAccount := application.NewCreateAccountService(accountRepository, balanceRepository)
 	getAccount := application.NewGetAccountServiceFinder(accountGateway)
 	depositIn := application.NewDepositIn(balanceRepository, accountRepository, transactionsRepository)
+	transferMoney := application.NewTransferMoney(balanceRepository, accountRepository, transactionsRepository, entriesRepository)
 
-	accountController := http.NewAccountController(createAccount, getAccount, depositIn)
+	accountController := http.NewAccountController(createAccount, getAccount, depositIn, transferMoney)
 
 	controllers := &http.Controllers{
 		AccountController: accountController,

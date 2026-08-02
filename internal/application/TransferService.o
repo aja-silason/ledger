@@ -1,0 +1,98 @@
+package application
+
+import (
+	"context"
+	"errors"
+	"fmt"
+
+	"github.com/aja-silason/ledger/internal/domain"
+	"github.com/google/uuid"
+)
+
+var (
+	ErrInsufficientBalance = errors.New("saldo insuficiente para realizar a transferência")
+	ErrInvalidAmount       = errors.New("o valor da transferência deve ser maior que zero")
+	ErrSameAccount         = errors.New("a conta de origem e destino não podem ser a mesma")
+)
+
+type TransferInput struct {
+	FromAccountID uuid.UUID
+	ToAccountID   uuid.UUID
+	Currency      string
+	Amount        int64
+}
+
+type TransferService struct {
+	balanceRepo BalanceRepository
+	txManager   TxManager
+}
+
+func NewTransferService(balanceRepo BalanceRepository, txManager TxManager) *TransferService {
+	return &TransferService{
+		balanceRepo: balanceRepo,
+		txManager:   txManager,
+	}
+}
+
+func (s *TransferService) Execute(ctx context.Context, input TransferInput) error {
+	// 1. Validações básicas de parâmetro
+	if input.Amount <= 0 {
+		return ErrInvalidAmount
+	}
+	if input.FromAccountID == input.ToAccountID {
+		return ErrSameAccount
+	}
+
+	// 2. Transação Atômica do Banco
+	return s.txManager.ExecInTx(ctx, func(txCtx context.Context) error {
+		var fromBalance, toBalance *domain.Balance
+		var err error
+
+		// PREVENÇÃO DE DEADLOCK:
+		// Sempre faz o FOR UPDATE ordenando as contas por UUID.
+		// Assim, independentemente de quem chamou a transferência (A->B ou B->A),
+		// a trava sempre será adquirida exatamente na mesma ordem no PostgreSQL.
+		if input.FromAccountID.String() < input.ToAccountID.String() {
+			fromBalance, err = s.balanceRepo.GetBalanceForUpdate(txCtx, input.FromAccountID, input.Currency)
+			if err != nil {
+				return err
+			}
+			toBalance, err = s.balanceRepo.GetBalanceForUpdate(txCtx, input.ToAccountID, input.Currency)
+			if err != nil {
+				return err
+			}
+		} else {
+			toBalance, err = s.balanceRepo.GetBalanceForUpdate(txCtx, input.ToAccountID, input.Currency)
+			if err != nil {
+				return err
+			}
+			fromBalance, err = s.balanceRepo.GetBalanceForUpdate(txCtx, input.FromAccountID, input.Currency)
+			if err != nil {
+				return err
+			}
+		}
+
+		// 3. Validação de Regra de Negócio: Saldo Suficiente
+		if fromBalance.CurrentAmount < input.Amount {
+			return ErrInsufficientBalance
+		}
+
+		// 4. Execução dos Débitos/Créditos em memória
+		fromBalance.CurrentAmount -= input.Amount
+		toBalance.CurrentAmount += input.Amount
+
+		// 5. Persistência dos novos saldos
+		if err := s.balanceRepo.UpdateBalance(txCtx, fromBalance); err != nil {
+			return fmt.Errorf("erro ao debitar da conta de origem: %w", err)
+		}
+
+		if err := s.balanceRepo.UpdateBalance(txCtx, toBalance); err != nil {
+			return fmt.Errorf("erro ao creditar na conta de destino: %w", err)
+		}
+
+		// Opcional: Aqui você pode salvar também o registro na tabela "transactions/ledger_entries"
+		// com o histórico detalhado do débito/crédito dentro da mesma transação `txCtx`.
+
+		return nil
+	})
+}

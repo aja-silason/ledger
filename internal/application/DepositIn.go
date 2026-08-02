@@ -9,6 +9,7 @@ package application
 
 import (
 	"context"
+	"errors"
 	"log"
 	"time"
 
@@ -36,28 +37,28 @@ func NewDepositIn(
 }
 
 var (
-	SuccessMessage               = "Depósito realizado com sucesso"
-	WasNotPossibleDepositInError = "Não foi possível efectuar o deposito"
-	IdempontecyError             = "Essa operação já foi realizada"
-	TransactionError             = "Erro ao executar a transação"
+	SuccessMessage               = domain.NewSuccessMessage("Depósito realizado com sucesso")
+	WasNotPossibleDepositInError = errors.New("Não foi possível efectuar o deposito")
+	IdempontecyError             = errors.New("Essa operação já foi realizada anteriormente, não é possível repetir a operação")
+	TransactionError             = errors.New("Erro ao executar a transação")
 )
 
-func (d *DepositIn) Deposit(ctx context.Context, input *domain.DepositInput, key string) (string, error) {
+func (d *DepositIn) Deposit(ctx context.Context, input *DepositInput, key string) (domain.SuccessMessage, error) {
 
 	account, err := d.accountRepo.FindByID(input.AccountId)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	balance, err := d.repo.FindByAccountId(input.AccountId)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	// idempotencyKey := uuid.New()
 	existing, err := d.transactionRepo.FindByIdempotencyKey(key)
 	if err == nil && existing != nil {
-		return IdempontecyError, err
+		return nil, IdempontecyError
 	}
 
 	newAmount := balance.CurrentAmount + input.Amount
@@ -84,13 +85,13 @@ func (d *DepositIn) Deposit(ctx context.Context, input *domain.DepositInput, key
 	_, err = d.repo.Update(saveBalance)
 	if err != nil {
 		log.Printf("[ERRO CRIAÇÃO] Falha ao executar o depósito")
-		return WasNotPossibleDepositInError, err
+		return nil, WasNotPossibleDepositInError
 	}
 
 	_, err = d.transactionRepo.Save(saveTransaction)
 	if err != nil {
 		log.Printf("[ERRO TRANSAÇÃO] Falha ao executar a transação")
-		return TransactionError, nil
+		return nil, TransactionError
 	}
 
 	return SuccessMessage, nil
