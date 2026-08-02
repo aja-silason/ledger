@@ -8,6 +8,7 @@ import (
 
 	"github.com/aja-silason/ledger/internal/domain"
 	"github.com/aja-silason/ledger/internal/infra/postgres"
+	"github.com/aja-silason/ledger/internal/security"
 	"github.com/google/uuid"
 )
 
@@ -35,6 +36,7 @@ func NewDrawedCardLess(
 var (
 	ThatOperationIsAlreadyRealized = errors.New("Esta operação já foi realizada")
 	ThisCodeIsNotPendingErr        = errors.New("Este levantamento não está pendente")
+	CodeNotMatchErr                = errors.New("Código secreto incorrecto, tente novamente com outra combinação!")
 )
 
 func (c *DrawedCardLess) Drawed(ctx context.Context, key string, input *DrawedCardLessInput) (domain.SuccessMessage, error) {
@@ -47,6 +49,11 @@ func (c *DrawedCardLess) Drawed(ctx context.Context, key string, input *DrawedCa
 	if err != nil {
 		return nil, err
 	}
+
+	if err := security.ValidateHash(input.SecretCode, withdraw.CodeHash); err != true {
+		return nil, CodeNotMatchErr
+	}
+
 	if withdraw != nil && !withdraw.IsPendig() {
 		return nil, ThisCodeIsNotPendingErr
 	}
@@ -109,11 +116,11 @@ func (c *DrawedCardLess) transactionByDrawed(ctx context.Context, key, accountId
 	return nil
 }
 
-func (c *DrawedCardLess) decreaseAmountDrawed(fromBalance *domain.Balance, amount int64) error {
-	decreaseAmount := fromBalance.CurrentAmount - amount
+func (c *DrawedCardLess) decreaseAmountDrawed(balance *domain.Balance, amount int64) error {
+	decreaseAmount := balance.CurrentAmount - amount
 	decreaseUpdated := time.Now().UTC()
 	decrease := &domain.Balance{
-		ID:            fromBalance.ID,
+		ID:            balance.ID,
 		CurrentAmount: decreaseAmount,
 		UpdatedAt:     decreaseUpdated,
 	}
