@@ -11,6 +11,7 @@ func SetupRoutes(c *Controllers) *gin.Engine {
 		accounts.GET("", c.AccountController.FindAll)
 		accounts.GET("/:id", c.AccountController.FindByID)
 		accounts.POST("/deposit", c.AccountController.DepositInAccount)
+		accounts.POST("/transfer", c.AccountController.Transfer)
 	}
 
 	return r

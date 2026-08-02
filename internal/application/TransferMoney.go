@@ -39,7 +39,7 @@ var (
 	ErrOperationHasAlreadyConcluted = errors.New("Esta operação já foi realizada")
 )
 
-func (d *TransferMoney) Transfer(ctx context.Context, input TransferMoneyInput, key string) (domain.SuccessMessage, error) {
+func (d *TransferMoney) Transfer(ctx context.Context, input *TransferMoneyInput, key string) (domain.SuccessMessage, error) {
 	if input.Amount <= 0 {
 		return nil, ErrInvalidAmount
 	}

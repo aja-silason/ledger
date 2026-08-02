@@ -89,3 +89,27 @@ func (h *AccountController) DepositInAccount(c *gin.Context) {
 
 	c.JSON(http.StatusCreated, result)
 }
+
+func (h *AccountController) Transfer(c *gin.Context) {
+
+	idempotencyKey := c.GetHeader("X-Idempotency-Key")
+	if idempotencyKey == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Header X-Idempotency-Key é obrigatória"})
+		return
+	}
+
+	var req application.TransferMoneyInput
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Payload inválido"})
+		return
+	}
+
+	result, err := h.TransferMoney.Transfer(c.Request.Context(), &req, idempotencyKey)
+	if err != nil {
+		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusCreated, result)
+}
