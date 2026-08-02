@@ -16,31 +16,32 @@ func NewPostgresSQLWithdrawRepository(db *sql.DB) *WithdrawRepository {
 
 var WithdrawFoundError = errors.New("Levantamento não encontrado")
 
-func (b *WithdrawRepository) Save(balance *domain.Withdraw) (*domain.Withdraw, error) {
-	now := time.Now().UTC()
-
+func (b *WithdrawRepository) Save(wt *domain.Withdraw) (*domain.Withdraw, error) {
 	res, err := b.db.Exec(`
-		INSERT INTO account_balances (id, account_id, amount, status, code_hash, expires_at, creadet_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
-		balance.ID,
-		balance.AccountID,
-		balance.Amount,
-		balance.Status,
-		balance.CodeHash,
-		balance.ExpiresAt,
-		now,
-		now)
+		INSERT INTO withdraws (id, account_id, amount, status, code, code_hash, expires_at, creadet_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+		wt.ID, wt.AccountID, wt.Amount, wt.Status, wt.Code, wt.CodeHash, wt.ExpiresAt, wt.CreatedAt, wt.UpdatedAt)
 	if res != nil {
 		return nil, err
 	}
+	return wt, nil
+}
 
-	return balance, nil
+func (b *WithdrawRepository) FindByCode(code int64) (*domain.Withdraw, error) {
+	u := &domain.Withdraw{}
+	err := b.db.QueryRow(
+		`SELECT id, account_id, amount, status, code_hash, code, expires_at, creadet_at, updated_at FROM withdraws WHERE code = $1`, code,
+	).Scan(&u.ID, &u.AccountID, &u.Amount, &u.Status, &u.CodeHash, &u.Code, &u.ExpiresAt, &u.CreatedAt, &u.UpdatedAt)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, BalanceNotFoundError
+	}
+	return u, err
 }
 
 func (b *WithdrawRepository) FindById(id string) (*domain.Withdraw, error) {
 	u := &domain.Withdraw{}
 	err := b.db.QueryRow(
-		`SELECT id, account_id, amount, status, code_hash, expires_at, creadet_at, updated_at FROM withdraws WHERE id = $1`, id,
-	).Scan(&u.ID, &u.AccountID, &u.Amount, &u.Status, &u.CodeHash, &u.ExpiresAt, &u.CreatedAt, &u.UpdatedAt)
+		`SELECT id, account_id, amount, status, code_hash, code, expires_at, creadet_at, updated_at FROM withdraws WHERE id = $1`, id,
+	).Scan(&u.ID, &u.AccountID, &u.Amount, &u.Status, &u.CodeHash, &u.Code, &u.ExpiresAt, &u.CreatedAt, &u.UpdatedAt)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, BalanceNotFoundError
 	}
@@ -50,8 +51,8 @@ func (b *WithdrawRepository) FindById(id string) (*domain.Withdraw, error) {
 func (b *WithdrawRepository) FindByAccountId(id string) (*domain.Withdraw, error) {
 	u := &domain.Withdraw{}
 	err := b.db.QueryRow(
-		`SELECT id, account_id, amount, status, code_hash, expires_at, creadet_at, updated_at FROM withdraws WHERE account_id = $1`, id,
-	).Scan(&u.ID, &u.AccountID, &u.Amount, &u.Status, &u.CodeHash, &u.ExpiresAt, &u.CreatedAt, &u.UpdatedAt)
+		`SELECT id, account_id, amount, status, code_hash, code, expires_at, creadet_at, updated_at FROM withdraws WHERE id = $1`, id,
+	).Scan(&u.ID, &u.AccountID, &u.Amount, &u.Status, &u.CodeHash, &u.Code, &u.ExpiresAt, &u.CreatedAt, &u.UpdatedAt)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, BalanceNotFoundError
 	}
@@ -68,6 +69,5 @@ func (b *WithdrawRepository) UpdateStatus(id string, status string) (*domain.Wit
 	if res != nil {
 		return nil, err
 	}
-
 	return nil, nil
 }

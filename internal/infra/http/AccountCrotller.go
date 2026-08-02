@@ -13,18 +13,21 @@ type AccountController struct {
 	Finder        *application.GetAccountServiceFinder
 	DepositIn     *application.DepositIn
 	TransferMoney *application.TransferMoney
+	Withdraw      *application.WidrawCardLess
 }
 
 func NewAccountController(
 	Create *application.CreateAccountService,
 	Finder *application.GetAccountServiceFinder,
 	DepositIn *application.DepositIn,
-	TransferMoney *application.TransferMoney) *AccountController {
+	TransferMoney *application.TransferMoney,
+	Withdraw *application.WidrawCardLess) *AccountController {
 	return &AccountController{
 		Create:        Create,
 		Finder:        Finder,
 		DepositIn:     DepositIn,
-		TransferMoney: TransferMoney}
+		TransferMoney: TransferMoney,
+		Withdraw:      Withdraw}
 }
 
 func (h *AccountController) CreateAccount(c *gin.Context) {
@@ -106,6 +109,24 @@ func (h *AccountController) Transfer(c *gin.Context) {
 	}
 
 	result, err := h.TransferMoney.Transfer(c.Request.Context(), &req, idempotencyKey)
+	if err != nil {
+		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusCreated, result)
+}
+
+func (h *AccountController) WithdrawCardLess(c *gin.Context) {
+
+	var req application.WithDrawInput
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Payload inválido"})
+		return
+	}
+
+	result, err := h.Withdraw.DemandWidraw(c.Request.Context(), &req)
 	if err != nil {
 		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
 		return

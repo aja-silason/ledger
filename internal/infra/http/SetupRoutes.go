@@ -12,6 +12,7 @@ func SetupRoutes(c *Controllers) *gin.Engine {
 		accounts.GET("/:id", c.AccountController.FindByID)
 		accounts.POST("/deposit", c.AccountController.DepositInAccount)
 		accounts.POST("/transfer", c.AccountController.Transfer)
+		accounts.POST("/withdraw", c.AccountController.WithdrawCardLess)
 	}
 
 	return r

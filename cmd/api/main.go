@@ -36,6 +36,7 @@ func main() {
 	transactionsRepository := postgres.NewPostgresSQLTransactionRepository(db)
 	entriesRepository := postgres.NewPostgresSQLEntriesRepository(db)
 	accountGateway := postgres.NewPostgresSQLAccountGateway(db)
+	withDrawRepository := postgres.NewPostgresSQLWithdrawRepository(db)
 
 	// Injeções dos Services
 	createAccount := application.NewCreateAccountService(accountRepository, balanceRepository)
@@ -43,7 +44,9 @@ func main() {
 	depositIn := application.NewDepositIn(balanceRepository, accountRepository, transactionsRepository)
 	transferMoney := application.NewTransferMoney(balanceRepository, accountRepository, transactionsRepository, entriesRepository)
 
-	accountController := http.NewAccountController(createAccount, getAccount, depositIn, transferMoney)
+	withdrawCardless := application.NewWidrawCardLess(withDrawRepository, accountRepository)
+
+	accountController := http.NewAccountController(createAccount, getAccount, depositIn, transferMoney, withdrawCardless)
 
 	controllers := &http.Controllers{
 		AccountController: accountController,
