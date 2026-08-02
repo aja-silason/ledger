@@ -2,6 +2,7 @@ package application
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strconv"
 	"time"
@@ -27,7 +28,15 @@ func NewWidrawCardLess(
 	}
 }
 
+var WithDrawIsPendingErr = errors.New("Possui um levantamento sem cartão pendente")
+
 func (w *WidrawCardLess) DemandWidraw(ctx context.Context, input *WithDrawInput) (domain.SuccessMessage, error) {
+
+	drawed, err := w.repo.FindByAccountId(input.AccountID)
+	if drawed != nil && drawed.Status == domain.PENDING {
+		return nil, WithDrawIsPendingErr
+	}
+
 	account, err := w.accountRepo.FindByID(input.AccountID)
 	if err != nil {
 		return nil, err

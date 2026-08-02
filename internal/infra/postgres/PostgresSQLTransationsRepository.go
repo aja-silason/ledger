@@ -25,16 +25,6 @@ func (t *TransactionRepository) Save(ctx context.Context, transaction *domain.Tr
 
 	defer tx.Rollback()
 
-	// _, err := t.db.Exec(`
-	// 	INSERT INTO transactions (id, idempotency_key, description, created_at) VALUES ($1, $2, $3, $4)`,
-	// 	transaction.ID,
-	// 	transaction.IdempotencyKey,
-	// 	transaction.Description,
-	// 	now)
-	// if err != nil {
-	// 	return nil, err
-	// }
-
 	_, err = tx.ExecContext(ctx, `
         INSERT INTO transactions (id, idempotency_key, description, created_at) 
         VALUES ($1, $2, $3, $4)`,

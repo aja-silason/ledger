@@ -54,9 +54,17 @@ func (w *Withdraw) ValidateAmountToWithDraw() error {
 	return nil
 }
 
+func (w *Withdraw) IsPendig() bool {
+	return w.Status == PENDING
+}
+
 func (w *Withdraw) Drawed() (Withdraw, error) {
 	drawed := Withdraw{Status: DRAWED}
 	return drawed, nil
+}
+
+func (w *Withdraw) IsDrawed() bool {
+	return w.Status == DRAWED
 }
 
 func (w *Withdraw) Canceled() (Withdraw, error) {
@@ -64,9 +72,17 @@ func (w *Withdraw) Canceled() (Withdraw, error) {
 	return canceled, nil
 }
 
+func (w *Withdraw) IsCanceled() bool {
+	return w.Status == CANCELED
+}
+
 func (w *Withdraw) Expired() (Withdraw, error) {
 	expired := Withdraw{Status: EXPIRED}
 	return expired, nil
+}
+
+func (w *Withdraw) IsExpired() bool {
+	return w.Status == EXPIRED
 }
 
 func (w *Withdraw) MarkAsExpired() error {
