@@ -1,12 +1,11 @@
 package postgres
 
 import (
+	"context"
 	"database/sql"
 	"errors"
-	"time"
 
 	"github.com/aja-silason/ledger/internal/domain"
-	"github.com/google/uuid"
 )
 
 type TransactionRepository struct{ db *sql.DB }
@@ -17,17 +16,57 @@ func NewPostgresSQLTransactionRepository(db *sql.DB) *TransactionRepository {
 
 var TransactionNotFound = errors.New("Transação não encontrada")
 
-func (t *TransactionRepository) Save(transaction *domain.Transaction) (*domain.Transaction, error) {
-	id := uuid.New()
-	now := time.Now().UTC()
+func (t *TransactionRepository) Save(ctx context.Context, transaction *domain.Transaction) (*domain.Transaction, error) {
 
-	res, err := t.db.Exec(`
-		INSERT INTO transactions (id, idempotency_key, description, created_at) VALUES ($1, $2, $3, $4)`,
-		id,
+	tx, err := t.db.BeginTx(ctx, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	defer tx.Rollback()
+
+	// _, err := t.db.Exec(`
+	// 	INSERT INTO transactions (id, idempotency_key, description, created_at) VALUES ($1, $2, $3, $4)`,
+	// 	transaction.ID,
+	// 	transaction.IdempotencyKey,
+	// 	transaction.Description,
+	// 	now)
+	// if err != nil {
+	// 	return nil, err
+	// }
+
+	_, err = tx.ExecContext(ctx, `
+        INSERT INTO transactions (id, idempotency_key, description, created_at) 
+        VALUES ($1, $2, $3, $4)`,
+		transaction.ID,
 		transaction.IdempotencyKey,
 		transaction.Description,
-		now)
-	if res != nil {
+		transaction.CreatedAt,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(transaction.Legs) > 0 {
+		queryLeg := `
+            INSERT INTO entries (id, transaction_id, account_id, amount, direction)
+            VALUES ($1, $2, $3, $4, $5)`
+
+		for _, leg := range transaction.Legs {
+			_, err = tx.ExecContext(ctx, queryLeg,
+				leg.ID,
+				leg.TransactionID,
+				leg.AccountID,
+				leg.Amount,
+				leg.Direction,
+			)
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
+
+	if err := tx.Commit(); err != nil {
 		return nil, err
 	}
 

@@ -9,6 +9,7 @@ import (
 	"github.com/aja-silason/ledger/internal/domain"
 	"github.com/aja-silason/ledger/internal/infra/postgres"
 	"github.com/google/uuid"
+	"github.com/shopspring/decimal"
 )
 
 type TransferMoney struct {
@@ -88,7 +89,7 @@ func (d *TransferMoney) Transfer(ctx context.Context, input *TransferMoneyInput,
 		return nil, err
 	}
 
-	err = d.transaction(key, fromAccount.ID, toAccount.ID, input.Amount)
+	err = d.transaction(ctx, key, fromAccount.ID, toAccount.ID, input.Amount)
 	if err != nil {
 		return nil, err
 	}
@@ -123,7 +124,7 @@ func (d *TransferMoney) decreadeAmount(fromBalance *domain.Balance, amount int64
 
 func (d *TransferMoney) encreaseAmount(toBalance *domain.Balance, amount int64) error {
 
-	encreaseAmount := toBalance.CurrentAmount - amount
+	encreaseAmount := toBalance.CurrentAmount + amount
 	encreaseUpdated := time.Now().UTC()
 	encrease := &domain.Balance{
 		ID:            toBalance.ID,
@@ -139,7 +140,7 @@ func (d *TransferMoney) encreaseAmount(toBalance *domain.Balance, amount int64) 
 	return nil
 }
 
-func (d *TransferMoney) transaction(key string, fromAccountId, toAccountId uuid.UUID, amount int64) error {
+func (d *TransferMoney) transaction(ctx context.Context, key string, fromAccountId, toAccountId uuid.UUID, amount int64) error {
 
 	transactionId := uuid.New()
 	now := time.Now().UTC()
@@ -148,6 +149,7 @@ func (d *TransferMoney) transaction(key string, fromAccountId, toAccountId uuid.
 		ID:            uuid.New(),
 		TransactionID: transactionId,
 		AccountID:     fromAccountId,
+		Amount:        decimal.NewFromInt(amount),
 		Direction:     domain.Debit,
 	}
 
@@ -155,6 +157,7 @@ func (d *TransferMoney) transaction(key string, fromAccountId, toAccountId uuid.
 		ID:            uuid.New(),
 		TransactionID: transactionId,
 		AccountID:     toAccountId,
+		Amount:        decimal.NewFromInt(amount),
 		Direction:     domain.Credit,
 	}
 
@@ -168,7 +171,7 @@ func (d *TransferMoney) transaction(key string, fromAccountId, toAccountId uuid.
 		CreatedAt:      now,
 	}
 
-	_, err := d.transactionRepo.Save(savedTransaction)
+	_, err := d.transactionRepo.Save(ctx, savedTransaction)
 	if err != nil {
 		return err
 	}

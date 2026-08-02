@@ -88,7 +88,7 @@ func (d *DepositIn) Deposit(ctx context.Context, input *DepositInput, key string
 		return nil, WasNotPossibleDepositInError
 	}
 
-	_, err = d.transactionRepo.Save(saveTransaction)
+	_, err = d.transactionRepo.Save(ctx, saveTransaction)
 	if err != nil {
 		log.Printf("[ERRO TRANSAÇÃO] Falha ao executar a transação")
 		return nil, TransactionError
