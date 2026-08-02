@@ -38,20 +38,25 @@ func (u *CreateAccountService) PostCreateAccount(ctx context.Context, tx *domain
 		return nil, err
 	}
 
-	_, err := u.repo.Save(tx)
-	if err != nil {
-		log.Printf("[ERRO BANCO DE DADOS] Falha no Save: %v", err)
-		return nil, createdAccountError
-	}
-
 	now := time.Now().UTC()
 	accountBalance := &domain.Balance{
 		ID:            uuid.New(),
 		AccountID:     id,
-		CurrencyCode:  domain.AOA,
+		CurrencyCode:  "AOA",
 		CurrentAmount: 0,
 		UpdatedAt:     now,
 		CreatedAt:     now,
+	}
+
+	if err := accountBalance.ValidateCurrency(); err != nil {
+		log.Printf("[ERRO VALIDAÇÃO] Falha na validação da moeda: %v", err)
+		return nil, err
+	}
+
+	_, err := u.repo.Save(tx)
+	if err != nil {
+		log.Printf("[ERRO BANCO DE DADOS] Falha no Save: %v", err)
+		return nil, createdAccountError
 	}
 
 	_, err = u.balanceRepo.Save(accountBalance)

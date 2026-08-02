@@ -42,7 +42,7 @@ func (h *AccountController) FindByID(c *gin.Context) {
 
 	resul, err := h.Finder.FindAccountByID(c.Request.Context(), id)
 	if err != nil {
-		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
+		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
 	}
 
