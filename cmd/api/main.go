@@ -32,11 +32,11 @@ func main() {
 
 	accountRepository := postgres.NewPostgresSQLAccountRepository(db)
 	balanceRepository := postgres.NewPostgresSQLBalanceRepository(db)
+	transactionsRepository := postgres.NewPostgresSQLTransactionRepository(db)
 	accountGateway := postgres.NewPostgresSQLAccountGateway(db)
 	createAccount := application.NewCreateAccountService(accountRepository, balanceRepository)
 	getAccount := application.NewGetAccountServiceFinder(accountGateway)
-	depositIn := application.NewDepositIn(balanceRepository, accountRepository)
-	// ledgerController := http.NewLedgerController(nil, ledgerCreateService)
+	depositIn := application.NewDepositIn(balanceRepository, accountRepository, transactionsRepository)
 
 	accountController := http.NewAccountController(createAccount, getAccount, depositIn)
 

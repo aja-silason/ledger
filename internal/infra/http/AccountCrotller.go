@@ -64,13 +64,21 @@ func (h *AccountController) FindAll(c *gin.Context) {
 }
 
 func (h *AccountController) DepositInAccount(c *gin.Context) {
+
+	idempotencyKey := c.GetHeader("X-Idempotency-Key")
+	if idempotencyKey == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Header X-Idempotency-Key é obrigatória"})
+		return
+	}
+
 	var req domain.DepositInput
+
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Payload inválido"})
 		return
 	}
 
-	result, err := h.DepositIn.Deposit(c.Request.Context(), &req)
+	result, err := h.DepositIn.Deposit(c.Request.Context(), &req, idempotencyKey)
 	if err != nil {
 		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
 		return

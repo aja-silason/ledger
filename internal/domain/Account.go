@@ -85,7 +85,7 @@ func (a *Account) ValidateAccount() error {
 	return nil
 }
 
-func (a *Account) ValidateAccountType(types string) error {
+func (a *Account) ValidateAccountType() error {
 	switch a.Type {
 	case Asset, Equity, Liability, Revenue, Expense:
 		return nil

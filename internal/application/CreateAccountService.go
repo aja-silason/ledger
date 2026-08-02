@@ -34,7 +34,7 @@ func (u *CreateAccountService) PostCreateAccount(ctx context.Context, tx *domain
 		return nil, err
 	}
 
-	if err := tx.ValidateAccountType(string(tx.Type)); err != nil {
+	if err := tx.ValidateAccountType(); err != nil {
 		return nil, err
 	}
 

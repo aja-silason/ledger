@@ -59,7 +59,7 @@ func (b *BalanceRepository) FindByAccountId(id string) (*domain.Balance, error) 
 
 func (b *BalanceRepository) Update(balance *domain.Balance) (*domain.Balance, error) {
 	res, err := b.db.Exec(`
-		UPDATE account_balances SET amount = $1, updated_at = $2 WHERE id = $3`,
+		UPDATE account_balances SET current_amount = $1, updated_at = $2 WHERE id = $3`,
 		balance.CurrentAmount,
 		balance.UpdatedAt,
 		balance.ID)
