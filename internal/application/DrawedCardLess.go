@@ -3,6 +3,7 @@ package application
 import (
 	"context"
 	"errors"
+	"log"
 	"time"
 
 	"github.com/aja-silason/ledger/internal/domain"
@@ -14,17 +15,20 @@ type DrawedCardLess struct {
 	repo            *postgres.WithdrawRepository
 	transactionRepo *postgres.TransactionRepository
 	entries         *postgres.EntriesRepository
+	balanceRepo     *postgres.BalanceRepository
 }
 
 func NewDrawedCardLess(
 	repo *postgres.WithdrawRepository,
 	transactionRepo *postgres.TransactionRepository,
 	entries *postgres.EntriesRepository,
+	balanceRepo *postgres.BalanceRepository,
 ) *DrawedCardLess {
 	return &DrawedCardLess{
 		repo:            repo,
 		transactionRepo: transactionRepo,
 		entries:         entries,
+		balanceRepo:     balanceRepo,
 	}
 }
 
@@ -42,6 +46,16 @@ func (c *DrawedCardLess) Drawed(ctx context.Context, key string, input *DrawedCa
 	}
 
 	drawed, err := withdraw.Drawed()
+	if err != nil {
+		return nil, err
+	}
+
+	balance, err := c.balanceRepo.FindByAccountId(withdraw.AccountID.String())
+	if err != nil {
+		return nil, err
+	}
+
+	err = c.decreaseAmountDrawed(balance, drawed.Amount)
 	if err != nil {
 		return nil, err
 	}
@@ -85,6 +99,22 @@ func (c *DrawedCardLess) transactionByDrawed(ctx context.Context, key, accountId
 	_, err := c.transactionRepo.Save(ctx, transaction)
 	if err != nil {
 		return err
+	}
+	return nil
+}
+
+func (c *DrawedCardLess) decreaseAmountDrawed(fromBalance *domain.Balance, amount int64) error {
+	decreaseAmount := fromBalance.CurrentAmount - amount
+	decreaseUpdated := time.Now().UTC()
+	decrease := &domain.Balance{
+		ID:            fromBalance.ID,
+		CurrentAmount: decreaseAmount,
+		UpdatedAt:     decreaseUpdated,
+	}
+	_, err := c.balanceRepo.Update(decrease)
+	if err != nil {
+		log.Printf("[RETIRAR DA CONTA ORIGEM] Falha ao retirar da conta origem")
+		return errors.New("Não foi possível retirar os valores da conta origem")
 	}
 	return nil
 }
