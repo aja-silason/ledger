@@ -22,7 +22,7 @@ type Account struct {
 	ID   uuid.UUID   `json:"id"`
 	Name string      `json:"name"`
 	Type AccountType `json:"type"`
-	// Balance   decimal.Decimal `json:"balance"`
+	// Balance   domain.Balances `json:"balance"`
 	CreatedAt time.Time `json:"created_at"`
 }
 

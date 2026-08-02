@@ -35,9 +35,10 @@ func main() {
 	accountGateway := postgres.NewPostgresSQLAccountGateway(db)
 	createAccount := application.NewCreateAccountService(accountRepository, balanceRepository)
 	getAccount := application.NewGetAccountServiceFinder(accountGateway)
+	depositIn := application.NewDepositIn(balanceRepository, accountRepository)
 	// ledgerController := http.NewLedgerController(nil, ledgerCreateService)
 
-	accountController := http.NewAccountController(createAccount, getAccount)
+	accountController := http.NewAccountController(createAccount, getAccount, depositIn)
 
 	controllers := &http.Controllers{
 		AccountController: accountController,

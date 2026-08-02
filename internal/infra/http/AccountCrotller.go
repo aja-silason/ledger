@@ -9,16 +9,19 @@ import (
 )
 
 type AccountController struct {
-	Create *application.CreateAccountService
-	Finder *application.GetAccountServiceFinder
+	Create    *application.CreateAccountService
+	Finder    *application.GetAccountServiceFinder
+	DepositIn *application.DepositIn
 }
 
 func NewAccountController(
 	Create *application.CreateAccountService,
-	Finder *application.GetAccountServiceFinder) *AccountController {
+	Finder *application.GetAccountServiceFinder,
+	DepositIn *application.DepositIn) *AccountController {
 	return &AccountController{
-		Create: Create,
-		Finder: Finder}
+		Create:    Create,
+		Finder:    Finder,
+		DepositIn: DepositIn}
 }
 
 func (h *AccountController) CreateAccount(c *gin.Context) {
@@ -58,4 +61,20 @@ func (h *AccountController) FindAll(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusAccepted, result)
+}
+
+func (h *AccountController) DepositInAccount(c *gin.Context) {
+	var req domain.DepositInput
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Payload inválido"})
+		return
+	}
+
+	result, err := h.DepositIn.Deposit(c.Request.Context(), &req)
+	if err != nil {
+		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusCreated, result)
 }

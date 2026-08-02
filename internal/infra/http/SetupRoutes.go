@@ -10,6 +10,7 @@ func SetupRoutes(c *Controllers) *gin.Engine {
 		accounts.POST("", c.AccountController.CreateAccount)
 		accounts.GET("", c.AccountController.FindAll)
 		accounts.GET("/:id", c.AccountController.FindByID)
+		accounts.POST("/deposit", c.AccountController.DepositInAccount)
 	}
 
 	return r
