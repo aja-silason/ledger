@@ -82,6 +82,11 @@ func (d *DepositIn) Deposit(ctx context.Context, input *DepositInput, key string
 		CreatedAt:      transactionCreatedAt,
 	}
 
+	err = saveTransaction.Validate()
+	if err != nil {
+		return nil, err
+	}
+
 	_, err = d.repo.Update(saveBalance)
 	if err != nil {
 		log.Printf("[ERRO CRIAÇÃO] Falha ao executar o depósito")
